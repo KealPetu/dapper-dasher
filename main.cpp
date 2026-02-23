@@ -1,28 +1,58 @@
+#include <iostream>
 #include <raylib.h>
 
-constexpr int WINDOW_WIDTH  { 1280 };
-constexpr int WINDOW_HEIGHT { 720 };
+#include "build/_deps/raylib-src/src/raymath.h"
 
+constexpr int WINDOW_WIDTH  { 800 };
+constexpr int WINDOW_HEIGHT { 450 };
 constexpr float GRAVITY_ACC { 98.1 };
 
 struct Player {
     Vector2 position {0.f,0.f};
-    float velocity { 0.f };
+    Vector2 velocity {0.f,0.f};
+    Vector2 size {0.f,0.f};
+    bool canJump {false};
+    float jumpSpeed {0.f};
+    const float MAXIMUM_VELOCITY { 10.f };
 };
 
 int main() {
-    Player player {Vector2{WINDOW_WIDTH/2, WINDOW_HEIGHT - 80}, 0.f};
-    SetConfigFlags(FLAG_VSYNC_HINT);
 
+    Player player {
+        Vector2{0.f, 0.f},
+        Vector2{0.f,0.f},
+        Vector2{50.f,80.f},
+        false,
+        196.2f
+    };
+
+    player.position.x = WINDOW_WIDTH/2.f - player.size.x / 2.f;
+
+    SetConfigFlags(FLAG_VSYNC_HINT);
     InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "dapper dasher game");
 
     while (!WindowShouldClose()) {
+
         const float deltaTime {GetFrameTime()};
-        player.position.y -= GRAVITY_ACC * deltaTime;
+        player.velocity.y += GRAVITY_ACC * deltaTime;
+        player.position.y += player.velocity.y * deltaTime;
+
+        player.position.y = Clamp(player.position.y, 0.f, WINDOW_HEIGHT - player.size.y);
+
+        if (player.position.y == WINDOW_HEIGHT - player.size.y) {
+            player.canJump = true;
+            player.velocity.y = 0.f;
+        }
+
+        if (IsKeyPressed(KEY_SPACE) && player.canJump) {
+            player.velocity.y = -player.jumpSpeed;
+            player.canJump = false;
+        }
+
         BeginDrawing();
             ClearBackground(WHITE);
-            DrawRectangle(player.position.x, player.position.y, 50, 80, BLUE);
-            DrawFPS(10, 10);
+            DrawRectangle(player.position.x, player.position.y, player.size.x, player.size.y, BLUE);
+            DrawText(TextFormat("player.velocity.y: %.2f", player.velocity.y), 10, 10, 10, RED);
         EndDrawing();
     }
 
