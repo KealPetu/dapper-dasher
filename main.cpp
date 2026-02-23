@@ -5,7 +5,7 @@
 
 constexpr int WINDOW_WIDTH  { 800 };
 constexpr int WINDOW_HEIGHT { 450 };
-constexpr float GRAVITY_ACC { 98.1 };
+constexpr float GRAVITY_ACC { 981.f };
 
 struct Player {
     Vector2 position {0.f,0.f};
@@ -18,22 +18,23 @@ struct Player {
 
 int main() {
 
+    float deltaTime {0.f};
     Player player {
         Vector2{0.f, 0.f},
         Vector2{0.f,0.f},
         Vector2{50.f,80.f},
         false,
-        196.2f
+        654.f
     };
 
     player.position.x = WINDOW_WIDTH/2.f - player.size.x / 2.f;
 
-    SetConfigFlags(FLAG_VSYNC_HINT);
+    //SetConfigFlags(FLAG_VSYNC_HINT);
     InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "dapper dasher game");
 
     while (!WindowShouldClose()) {
 
-        const float deltaTime {GetFrameTime()};
+        deltaTime = GetFrameTime();
         player.velocity.y += GRAVITY_ACC * deltaTime;
         player.position.y += player.velocity.y * deltaTime;
 
