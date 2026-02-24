@@ -6,9 +6,10 @@ constexpr int WINDOW_HEIGHT {450};
 constexpr float GRAVITY_ACC {981.f};
 
 struct Player {
+    Vector2 position    {0.f, 0.f };
     Vector2 velocity    {0.f,0.f };
-    Rectangle rectangle {0.f, 0.f, 0.f, 0.f };
     Texture2D texture   {0, 0, 0, 0, 0 };
+    Rectangle textureRect {0.f, 0.f, 0.f, 0.f };
     float jumpVelocity  { 0.f };
     bool canJump        {false};
 };
@@ -20,24 +21,25 @@ int main() {
     float deltaTime {0.f};
     Player player {
         Vector2 {0.f,0.f},
-        Rectangle {0, 0, 0, 0},
+        Vector2 {0.f,0.f},
         Texture2D { LoadTexture("resources/sprites/scarfy/scarfy.png") },
+        Rectangle {0, 0, 0, 0},
         GRAVITY_ACC * 2 / 3,
         false
     };
 
-    player.rectangle.width = player.texture.width/6;
-    player.rectangle.height = player.texture.height;
-    player.rectangle.x = WINDOW_WIDTH/2.f - player.rectangle.width / 2.f;
+    player.textureRect.width = player.texture.width / 6;
+    player.textureRect.height = player.texture.height;
+    player.position.x = WINDOW_WIDTH/2.f - player.textureRect.width / 2.f;
 
     while (!WindowShouldClose()) {
 
         deltaTime = GetFrameTime();
         player.velocity.y += GRAVITY_ACC * deltaTime;
-        player.rectangle.y += player.velocity.y * deltaTime;
-        player.rectangle.y = Clamp(player.rectangle.y, 0.f, WINDOW_HEIGHT - player.rectangle.height);
+        player.position.y += player.velocity.y * deltaTime;
+        player.position.y = Clamp(player.position.y, 0.f, WINDOW_HEIGHT - player.textureRect.height);
 
-        if (player.rectangle.y == WINDOW_HEIGHT - player.rectangle.height) {
+        if (player.position.y == WINDOW_HEIGHT - player.textureRect.height) {
             player.canJump = true;
             player.velocity.y = 0.f;
         }
@@ -49,8 +51,7 @@ int main() {
 
         BeginDrawing();
             ClearBackground(WHITE);
-            DrawRectangle(static_cast<int>(player.rectangle.x), static_cast<int>(player.rectangle.y),
-                          static_cast<int>(player.rectangle.width), static_cast<int>(player.rectangle.height), BLUE);
+            DrawTextureRec(player.texture, player.textureRect, player.position, WHITE);
             DrawText(TextFormat("player.velocity.y: %.2f", player.velocity.y), 10, 10, 10, RED);
         EndDrawing();
     }
