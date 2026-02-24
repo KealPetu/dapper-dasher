@@ -56,6 +56,7 @@ int main() {
         EndDrawing();
     }
 
+    UnloadTexture(player.texture);
     CloseWindow();
     return 0;
 }
