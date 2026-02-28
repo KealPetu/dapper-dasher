@@ -32,10 +32,10 @@ int main() {
     player.textureRect.height = player.texture.height;
     player.position.x = WINDOW_WIDTH/2.f - player.textureRect.width / 2.f;
 
-    constexpr int FRAME_PER_SEC { 6 };
-    float timePerFrame { 1.f / FRAME_PER_SEC };
+    constexpr int FRAME_PER_SEC { 8 };
+    constexpr float TIME_PER_FRAME { 1.f / FRAME_PER_SEC };
     float currentTime { 0.f };
-    int frame { 0 };
+    int currentFrame { 0 };
     while (!WindowShouldClose()) {
         deltaTime = GetFrameTime();
         player.velocity.y += GRAVITY_ACC * deltaTime;
@@ -54,16 +54,16 @@ int main() {
 
         currentTime += deltaTime;
 
-        if (frame > 5) {
-            frame = 0;
-        }
-
-        if (currentTime >= timePerFrame) {
-            frame++;
+        if (currentTime >= TIME_PER_FRAME) {
+            currentFrame++;
             currentTime = 0.f;
         }
 
-        player.textureRect.x = player.texture.width/6 * frame;
+        if (currentFrame > 5) {
+            currentFrame = 0;
+        }
+
+        player.textureRect.x = player.texture.width/6 * currentFrame;
 
         BeginDrawing();
             ClearBackground(WHITE);
