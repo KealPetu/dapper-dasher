@@ -22,7 +22,7 @@ int main() {
     Player player {
         Vector2 {0.f,0.f},
         Vector2 {0.f,0.f},
-        Texture2D { LoadTexture("resources/sprites/scarfy/scarfy.png") },
+        Texture2D { LoadTexture("./resources/sprites/scarfy/scarfy.png") },
         Rectangle {0, 0, 0, 0},
         GRAVITY_ACC * 2 / 3,
         false
@@ -32,8 +32,11 @@ int main() {
     player.textureRect.height = player.texture.height;
     player.position.x = WINDOW_WIDTH/2.f - player.textureRect.width / 2.f;
 
+    constexpr int FRAME_PER_SEC { 6 };
+    float timePerFrame { 1.f / FRAME_PER_SEC };
+    float currentTime { 0.f };
+    int frame { 0 };
     while (!WindowShouldClose()) {
-
         deltaTime = GetFrameTime();
         player.velocity.y += GRAVITY_ACC * deltaTime;
         player.position.y += player.velocity.y * deltaTime;
@@ -48,6 +51,19 @@ int main() {
             player.velocity.y = -player.jumpVelocity;
             player.canJump = false;
         }
+
+        currentTime += deltaTime;
+
+        if (frame > 5) {
+            frame = 0;
+        }
+
+        if (currentTime >= timePerFrame) {
+            frame++;
+            currentTime = 0.f;
+        }
+
+        player.textureRect.x = player.texture.width/6 * frame;
 
         BeginDrawing();
             ClearBackground(WHITE);
