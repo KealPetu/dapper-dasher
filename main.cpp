@@ -70,6 +70,9 @@ int main() {
         }
 
         nebula.position.x += nebula.velocity.x * deltaTime;
+        if (nebula.position.x < -nebula.textureRect.width) {
+            nebula.position.x = WINDOW_WIDTH;
+        }
 
         player.currentTime += deltaTime;
 
@@ -86,31 +89,33 @@ int main() {
 
         nebula.currentTime += deltaTime;
 
-        if (nebula.currentTime >= nebula.TIME_PER_FRAME)
-        {
-            nebula.currentFrame++;
+        if (nebula.currentTime >= nebula.TIME_PER_FRAME) {
+            nebula.currentFrame = (nebula.currentFrame + 1) % 61;
             nebula.currentTime = 0.f;
+            int row = nebula.currentFrame / 8;
+            int col = nebula.currentFrame % 8;
+            nebula.textureRect.x = col * (nebula.texture.width / 8);
+            nebula.textureRect.y = row * (nebula.texture.height / 8);
         }
-
-        if (nebula.currentFrame != 0 && nebula.currentFrame % 8 == 0) {
-            nebula.textureRect.y += 100;
-            nebula.currentFrame = 0;
-        }
-
-        if (nebula.textureRect.x == 400 && nebula.textureRect.y == 700)
-        {
-            nebula.textureRect.x = 0;
-            nebula.textureRect.y = 0;
-            nebula.currentFrame = 0;
-        }
-
-        nebula.textureRect.x = nebula.texture.width/8 * nebula.currentFrame;
+        
+        Rectangle playerHitbox = {player.position.x + 45, player.position.y, player.textureRect.width - 60, player.textureRect.height};
+        Rectangle nebulaHitbox = {nebula.position.x + 20, nebula.position.y + 20, nebula.textureRect.width - 30, nebula.textureRect.height - 25};
+        bool isColliding = CheckCollisionRecs(playerHitbox, nebulaHitbox);
 
         BeginDrawing();
             ClearBackground(RAYWHITE);
             DrawTextureRec(player.texture, player.textureRect, player.position, WHITE);
+            //DEBUG
+            DrawRectangleLines(playerHitbox.x, playerHitbox.y, playerHitbox.width, playerHitbox.height, RED);
+            //-----
             DrawTextureRec(nebula.texture, nebula.textureRect, nebula.position, WHITE);
+            //DEBUG
+            DrawRectangleLines(nebulaHitbox.x, nebulaHitbox.y, nebulaHitbox.width, nebulaHitbox.height, RED);
+            //-----
             DrawText(TextFormat("player.velocity.y: %.2f", player.velocity.y), 10, 10, 10, RED);
+            if (isColliding) {
+                 DrawText("Collision!", 10, 30, 20, RED);
+            }
         EndDrawing();
     }
 
