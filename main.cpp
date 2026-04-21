@@ -7,28 +7,82 @@ constexpr float GRAVITY_ACC {981.f};
 
 struct Player
 {
-    Vector2 position    {0.f, 0.f };
-    Vector2 velocity    {0.f,0.f };
-    Texture2D texture   {0, 0, 0, 0, 0 };
-    Rectangle textureRect {0.f, 0.f, 0.f, 0.f };
-    float jumpVelocity  { 0.f };
-    const int FRAME_PER_SEC { 8 };
-    const float TIME_PER_FRAME { 1.f / FRAME_PER_SEC };
-    float currentTime { 0.f };
-    int currentFrame { 0 };
-    bool canJump        {false};
+    Vector2 position {};
+    Vector2 velocity {};
+    Texture2D texture {};
+    Rectangle textureRect {};
+    Rectangle hitboxRect {};
+    float jumpVelocity {};
+    const int FRAMES_PER_SEC { 8 };
+    const float TIME_PER_FRAME { 1.f / FRAMES_PER_SEC };
+    float currentTime {};
+    int currentFrame {};
+    bool canJump {};
+
+    void Update(const float deltaTime, const float windowHeight) {
+        velocity.y += GRAVITY_ACC * deltaTime;
+        position.y += velocity.y * deltaTime;
+        position.y = Clamp(position.y, 0.f,windowHeight - textureRect.height);
+        if (position.y == windowHeight - textureRect.height) {
+            canJump = true;
+            velocity.y = 0.f;
+        }
+        if (IsKeyPressed(KEY_SPACE) && canJump) {
+            velocity.y = -jumpVelocity;
+            canJump = false;
+        }
+        currentTime += deltaTime;
+        if (currentTime >= TIME_PER_FRAME && canJump) {
+            currentFrame++;
+            currentTime = 0.f;
+            if (currentFrame > 5) currentFrame = 0;
+        }
+        textureRect.x = texture.width/6 * currentFrame;
+        hitboxRect = {position.x + 45, position.y, textureRect.width - 60, textureRect.height};
+    }
+
+    void Draw() {
+        DrawTextureRec(texture, textureRect, position, WHITE);
+        //DEBUG-
+        DrawRectangleLines(hitboxRect.x, hitboxRect.y, hitboxRect.width, hitboxRect.height, RED);
+        //------
+    }
 };
 
 struct Nebula
 {
-    Vector2 position    {0.f, 0.f };
-    Vector2 velocity    {0.f,0.f };
-    Texture2D texture   {0, 0, 0, 0, 0 };
-    Rectangle textureRect {0.f, 0.f, 0.f, 0.f };
-    const int FRAME_PER_SEC { 8 };
-    const float TIME_PER_FRAME { 1.f / FRAME_PER_SEC };
-    float currentTime { 0.f };
-    int currentFrame { 0 };
+    Vector2 position {};
+    Vector2 velocity {};
+    Texture2D texture {};
+    Rectangle textureRect {};
+    Rectangle hitboxRect {};
+    const int FRAMES_PER_SEC { 8 };
+    const float TIME_PER_FRAME { 1.f / FRAMES_PER_SEC };
+    float currentTime {};
+    int currentFrame {};
+
+    void Update(const float deltaTime, const float windowWidth) {
+        position.x += velocity.x * deltaTime;
+        if (position.x < -textureRect.width) {
+            position.x = windowWidth;
+        }
+        currentTime += deltaTime;
+        if (currentTime >= TIME_PER_FRAME) {
+            currentFrame = (currentFrame + 1) % 61;
+            currentTime = 0.f;
+            int row = currentFrame / 8;
+            int col = currentFrame % 8;
+            textureRect.x = col * (texture.width / 8);
+            textureRect.y = row * (texture.height / 8);
+        }
+        hitboxRect = {position.x + 20, position.y + 20, textureRect.width - 30, textureRect.height - 25};
+    }
+    void Draw() {
+        DrawTextureRec(texture, textureRect, position, WHITE);
+        //Debug-
+        DrawRectangleLines(hitboxRect.x, hitboxRect.y, hitboxRect.width, hitboxRect.height, RED);
+        //------
+    }
 };
 
 int main() {
@@ -55,63 +109,14 @@ int main() {
 
     while (!WindowShouldClose()) {
         deltaTime = GetFrameTime();
-        player.velocity.y += GRAVITY_ACC * deltaTime;
-        player.position.y += player.velocity.y * deltaTime;
-        player.position.y = Clamp(player.position.y, 0.f, WINDOW_HEIGHT - player.textureRect.height);
-
-        if (player.position.y == WINDOW_HEIGHT - player.textureRect.height) {
-            player.canJump = true;
-            player.velocity.y = 0.f;
-        }
-
-        if (IsKeyPressed(KEY_SPACE) && player.canJump) {
-            player.velocity.y = -player.jumpVelocity;
-            player.canJump = false;
-        }
-
-        nebula.position.x += nebula.velocity.x * deltaTime;
-        if (nebula.position.x < -nebula.textureRect.width) {
-            nebula.position.x = WINDOW_WIDTH;
-        }
-
-        player.currentTime += deltaTime;
-
-        if (player.currentTime >= player.TIME_PER_FRAME && player.canJump) {
-            player.currentFrame++;
-            player.currentTime = 0.f;
-        }
-
-        if (player.currentFrame > 5) {
-            player.currentFrame = 0;
-        }
-
-        player.textureRect.x = player.texture.width/6 * player.currentFrame;
-
-        nebula.currentTime += deltaTime;
-
-        if (nebula.currentTime >= nebula.TIME_PER_FRAME) {
-            nebula.currentFrame = (nebula.currentFrame + 1) % 61;
-            nebula.currentTime = 0.f;
-            int row = nebula.currentFrame / 8;
-            int col = nebula.currentFrame % 8;
-            nebula.textureRect.x = col * (nebula.texture.width / 8);
-            nebula.textureRect.y = row * (nebula.texture.height / 8);
-        }
-        
-        Rectangle playerHitbox = {player.position.x + 45, player.position.y, player.textureRect.width - 60, player.textureRect.height};
-        Rectangle nebulaHitbox = {nebula.position.x + 20, nebula.position.y + 20, nebula.textureRect.width - 30, nebula.textureRect.height - 25};
-        bool isColliding = CheckCollisionRecs(playerHitbox, nebulaHitbox);
+        player.Update(deltaTime, WINDOW_HEIGHT);
+        nebula.Update(deltaTime, WINDOW_WIDTH);
+        const bool isColliding = CheckCollisionRecs(player.hitboxRect, nebula.hitboxRect);
 
         BeginDrawing();
             ClearBackground(RAYWHITE);
-            DrawTextureRec(player.texture, player.textureRect, player.position, WHITE);
-            //DEBUG
-            DrawRectangleLines(playerHitbox.x, playerHitbox.y, playerHitbox.width, playerHitbox.height, RED);
-            //-----
-            DrawTextureRec(nebula.texture, nebula.textureRect, nebula.position, WHITE);
-            //DEBUG
-            DrawRectangleLines(nebulaHitbox.x, nebulaHitbox.y, nebulaHitbox.width, nebulaHitbox.height, RED);
-            //-----
+            player.Draw();
+            nebula.Draw();
             DrawText(TextFormat("player.velocity.y: %.2f", player.velocity.y), 10, 10, 10, RED);
             if (isColliding) {
                  DrawText("Collision!", 10, 30, 20, RED);
