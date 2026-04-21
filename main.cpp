@@ -13,6 +13,8 @@ struct Player
     Rectangle textureRect {};
     Rectangle hitboxRect {};
     float jumpVelocity {};
+    int frameCols {6};
+    const int TOTAL_FRAMES { 6 };
     const int FRAMES_PER_SEC { 8 };
     const float TIME_PER_FRAME { 1.f / FRAMES_PER_SEC };
     float currentTime {};
@@ -35,10 +37,13 @@ struct Player
         if (currentTime >= TIME_PER_FRAME && canJump) {
             currentFrame++;
             currentTime = 0.f;
-            if (currentFrame > 5) currentFrame = 0;
+            if (currentFrame == TOTAL_FRAMES) currentFrame = 0;
         }
-        textureRect.x = texture.width/6 * currentFrame;
-        hitboxRect = {position.x + 45, position.y, textureRect.width - 60, textureRect.height};
+        textureRect.x = texture.width/frameCols * currentFrame;
+        constexpr Vector2 hitboxOffset {45, 0};
+        constexpr Vector2 hitboxSizeReduction {60, 0};
+        hitboxRect = {position.x + hitboxOffset.x, position.y + hitboxOffset.y,
+            textureRect.width - hitboxSizeReduction.x, textureRect.height - hitboxSizeReduction.y};
     }
 
     void Draw() {
@@ -56,6 +61,9 @@ struct Nebula
     Texture2D texture {};
     Rectangle textureRect {};
     Rectangle hitboxRect {};
+    const int frameCols {8};
+    const int frameRows {8};
+    const int TOTAL_FRAMES { 61 };     // The last 3 cells are empty / don't have any sprites
     const int FRAMES_PER_SEC { 8 };
     const float TIME_PER_FRAME { 1.f / FRAMES_PER_SEC };
     float currentTime {};
@@ -68,14 +76,18 @@ struct Nebula
         }
         currentTime += deltaTime;
         if (currentTime >= TIME_PER_FRAME) {
-            currentFrame = (currentFrame + 1) % 61;
+            currentFrame = (currentFrame + 1) % TOTAL_FRAMES;
             currentTime = 0.f;
-            int row = currentFrame / 8;
-            int col = currentFrame % 8;
-            textureRect.x = col * (texture.width / 8);
-            textureRect.y = row * (texture.height / 8);
+            const int row = currentFrame / frameCols;
+            const int col = currentFrame % frameRows;
+            textureRect.x = col * (texture.width / frameCols);
+            textureRect.y = row * (texture.height / frameRows);
         }
-        hitboxRect = {position.x + 20, position.y + 20, textureRect.width - 30, textureRect.height - 25};
+        constexpr Rectangle padding {20, 20, 30, 25};
+        constexpr Vector2 hitboxOffset {20, 20};
+        constexpr Vector2 hitboxSizeReduction {30, 25};
+        hitboxRect = {position.x + hitboxOffset.x, position.y + hitboxOffset.y,
+            textureRect.width - hitboxSizeReduction.x, textureRect.height - hitboxSizeReduction.y};
     }
     void Draw() {
         DrawTextureRec(texture, textureRect, position, WHITE);
@@ -93,7 +105,7 @@ int main() {
 
     Player player;
     player.texture = LoadTexture("./resources/sprites/scarfy/scarfy.png");
-    player.textureRect.width = player.texture.width / 6;
+    player.textureRect.width = player.texture.width / player.frameCols;
     player.textureRect.height = player.texture.height;
     player.position.x = WINDOW_WIDTH/2.f - player.textureRect.width / 2.f;
     player.jumpVelocity = GRAVITY_ACC * 2/3;
@@ -101,8 +113,8 @@ int main() {
 
     Nebula nebula;
     nebula.texture = LoadTexture("./resources/sprites/nebula/nebula-spritesheet.png");
-    nebula.textureRect.width = nebula.texture.width / 8;
-    nebula.textureRect.height = nebula.texture.height / 8;
+    nebula.textureRect.width = nebula.texture.width / nebula.frameCols;
+    nebula.textureRect.height = nebula.texture.height / nebula.frameRows;
     nebula.position.x = WINDOW_WIDTH;
     nebula.position.y = WINDOW_HEIGHT - nebula.textureRect.height;
     nebula.velocity.x = -163.5f;
